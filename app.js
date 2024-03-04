@@ -21,6 +21,38 @@ pool.query(`CREATE TABLE IF NOT EXISTS Users (
   }
 });
 
+// Check if the evaluationtable exists, if not, create it
+pool.query(`CREATE TABLE IF NOT EXISTS evaluationtable (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  applicant_name VARCHAR(255) NOT NULL,
+  loan_type VARCHAR(255) NOT NULL,
+  sfdc_no VARCHAR(255) NOT NULL,
+  property_owner VARCHAR(255),
+  type_of_property VARCHAR(255),
+  postal_address VARCHAR(255),
+  land_mark VARCHAR(255),
+  north_by VARCHAR(255),
+  south_by VARCHAR(255),
+  east_by VARCHAR(255),
+  west_by VARCHAR(255),
+  schedule_property VARCHAR(255),
+  contact_person VARCHAR(255),
+  contact_no_mobile VARCHAR(255),
+  contact_no_landline VARCHAR(255),
+  plan_copy VARCHAR(255),
+  plan_copy_approved_no VARCHAR(255),
+  plan_copy_approved_by VARCHAR(255),
+  type_of_deed VARCHAR(255),
+  property_tax_receipt VARCHAR(255),
+  bill_receipt VARCHAR(255),
+  building_area VARCHAR(255),
+  uds_area VARCHAR(255)
+)`, (err) => {
+  if (err) {
+    console.error(err);
+  }
+});
+
 // Register API
 app.post('/register', (req, res) => {
     const { name, email, password, account_type } = req.body;
@@ -101,6 +133,64 @@ app.get('/users', (req, res) => {
     });
   });
 
+
+  // Create a new POST API for storing data in evaluationtable
+app.post('/financeform', (req, res) => {
+  try {
+    const evaluationData = req.body;
+     if(evaluationData.applicantName == ""){
+      return res.status(400).json({ error: 'Applicant Name is Empty' });
+     }
+    // Create an instance of the Evaluation model
+    const evaluation = new Evaluation(evaluationData);
+
+    // Insert data into evaluationtable
+    const insertDataQuery = `INSERT INTO evaluationtable (
+      applicant_name, loan_type, sfdc_no, property_owner, type_of_property,
+      postal_address, land_mark, north_by, south_by, east_by, west_by,
+      schedule_property, contact_person, contact_no_mobile, contact_no_landline,
+      plan_copy, plan_copy_approved_no, plan_copy_approved_by, type_of_deed,
+      property_tax_receipt, bill_receipt, building_area, uds_area
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const insertDataValues = [
+      evaluation.applicantName, evaluation.loanType, evaluation.sfdcNo,
+      evaluation.propertyOwner, evaluation.typeOfProperty, evaluation.postalAddress,
+      evaluation.landMark, evaluation.northBy, evaluation.southBy, evaluation.eastBy,
+      evaluation.westBy, evaluation.scheduleProperty, evaluation.contactPerson,
+      evaluation.contactNoMobile, evaluation.contactNoLandline, evaluation.planCopy,
+      evaluation.planCopyApprovedNo, evaluation.planCopyApprovedBy, evaluation.typeOfDeed,
+      evaluation.propertyTaxReceipt, evaluation.billReceipt, evaluation.buildingArea,
+      evaluation.udsArea
+    ];
+
+    pool.query(insertDataQuery, insertDataValues, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      res.json({ message: 'Data stored successfully', result: result });
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get All Finance Forms API
+app.get('/financeforms', (req, res) => {
+  // Retrieve all finance forms from the evaluationtable
+  const getAllFinanceFormsQuery = 'SELECT * FROM evaluationtable';
+
+  pool.query(getAllFinanceFormsQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    res.json({ financeForms: result });
+  });
+});
 
 // Start the server
 app.listen(port, () => {
