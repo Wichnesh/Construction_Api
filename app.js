@@ -121,7 +121,7 @@ app.post("/login", async (req, res) => {
     }
 
     pool.query(
-      "SELECT * FROM users WHERE email = ?",
+      "SELECT * FROM Users WHERE email = ?",
       [email],
       async (error, results) => {
         if (error) {
