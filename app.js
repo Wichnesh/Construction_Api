@@ -141,7 +141,7 @@ app.post("/login", async (req, res) => {
             const token = jwt.sign(userData, "your_secret_key", {
               expiresIn: "1h",
             });
-            res.status(200).json({ token });
+            res.status(200).json({ token, account_type: user.account_type });
           } else {
             res.status(401).send("Invalid email or password");
           }
