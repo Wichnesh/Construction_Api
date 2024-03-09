@@ -30,6 +30,7 @@ pool.query(
 pool.query(
   `CREATE TABLE IF NOT EXISTS evaluationtable (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  created_by INT,
   applicant_name VARCHAR(255) NOT NULL,
   loan_type VARCHAR(255) NOT NULL,
   sfdc_no VARCHAR(255) NOT NULL,
@@ -176,8 +177,33 @@ app.get("/users", (req, res) => {
   });
 });
 
+app.get("/protected", verifyToken, (req, res) => {
+  // Access user data from request object
+  const userId = req.user.id;
+  const username = req.user.username;
+
+  // Perform authorization logic based on user data
+  // For example, check if the user has admin role
+  if (req.user.account_type !== "admin") {
+    res.status(403).send("Unauthorized"); // Forbidden
+  } else {
+    // Authorized
+    res.json({ userId, username });
+  }
+});
+app.post("/deletetable", (req, res) => {
+  var tableName = req.body.table;
+  var sql = `DROP TABLE ${tableName}`;
+  pool.query(sql, function (err, result) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json({ message: `${tableName} - Table deleted` });
+    }
+  });
+});
 // Create a new POST API for storing data in evaluationtable
-app.post("/financeform", (req, res) => {
+app.post("/financeform", verifyToken, (req, res) => {
   try {
     const evaluationData = req.body;
     if (evaluationData.applicantName == "") {
@@ -188,14 +214,15 @@ app.post("/financeform", (req, res) => {
 
     // Insert data into evaluationtable
     const insertDataQuery = `INSERT INTO evaluationtable (
-      applicant_name, loan_type, sfdc_no, property_owner, type_of_property,
+      created_by, applicant_name, loan_type, sfdc_no, property_owner, type_of_property,
       postal_address, land_mark, north_by, south_by, east_by, west_by,
       schedule_property, contact_person, contact_no_mobile, contact_no_landline,
       plan_copy, plan_copy_approved_no, plan_copy_approved_by, type_of_deed,
       property_tax_receipt, bill_receipt, building_area, uds_area
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const insertDataValues = [
+      req.user.id,
       evaluation.applicantName,
       evaluation.loanType,
       evaluation.sfdcNo,
@@ -236,7 +263,7 @@ app.post("/financeform", (req, res) => {
 });
 
 // Get All Finance Forms API
-app.get("/financeforms", (req, res) => {
+app.get("/allfinanceforms", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const getAllFinanceFormsQuery = "SELECT * FROM evaluationtable";
 
@@ -248,20 +275,20 @@ app.get("/financeforms", (req, res) => {
     res.json({ financeForms: result });
   });
 });
-app.get("/protected", verifyToken, (req, res) => {
-  // Access user data from request object
-  const userId = req.user.id;
-  const username = req.user.username;
 
-  // Perform authorization logic based on user data
-  // For example, check if the user has admin role
-  if (req.user.role !== "admin") {
-    res.status(403).send("Unauthorized"); // Forbidden
-  } else {
-    // Authorized
-    res.json({ userId, username });
-  }
+app.get("/financeforms", verifyToken, (req, res) => {
+  // Retrieve all finance forms from the evaluationtable
+  const getAllFinanceFormsQuery = `SELECT * FROM evaluationtable WHERE created_by = ${req.user.id}`;
+
+  pool.query(getAllFinanceFormsQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    res.json({ financeForms: result });
+  });
 });
+
 function verifyToken(req, res, next) {
   // const bearerHeader = req.headers["authorization"];
   const token = req.header("Authorization");
