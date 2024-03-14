@@ -29,6 +29,11 @@ pool.query(
   `CREATE TABLE IF NOT EXISTS evaluationtable (
   id INT AUTO_INCREMENT PRIMARY KEY,
   created_by INT,
+  assigned_by INT,
+  assigned_to INT,
+  FOREIGN KEY (created_by) REFERENCES Users(id),
+  FOREIGN KEY (assigned_by) REFERENCES Users(id),
+  FOREIGN KEY (assigned_to) REFERENCES Users(id),
   applicant_name VARCHAR(255) NOT NULL,
   loan_type VARCHAR(255) NOT NULL,
   sfdc_no VARCHAR(255) NOT NULL,

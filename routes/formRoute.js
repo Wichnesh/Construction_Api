@@ -6,7 +6,19 @@ const Evaluation = require("../EvaluationModel");
 
 router.get("/", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
-  const getAllFinanceFormsQuery = "SELECT * FROM evaluationtable";
+  //const getAllFinanceFormsQuery = "SELECT * FROM evaluationtable";
+  const getAllFinanceFormsQuery = `SELECT evaluationtable.*, 
+                                          created_by.username AS created_by_username, 
+                                          created_by.email AS created_by_email, 
+                                          assigned_by.username AS assigned_by_username, 
+                                          assigned_by.email AS assigned_by_email, 
+                                          assigned_to.username AS assigned_to_username, 
+                                          assigned_to.email AS assigned_to_email
+                                        FROM evaluationtable 
+                                        INNER JOIN Users AS created_by ON evaluationtable.created_by = created_by.id
+                                        LEFT JOIN Users AS assigned_by ON evaluationtable.assigned_by = assigned_by.id
+                                        LEFT JOIN Users AS assigned_to ON evaluationtable.assigned_to = assigned_to.id`;
+
   pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Internal server error" });
@@ -35,6 +47,43 @@ router.get("/userforms", verifyToken, (req, res) => {
     }
     res.json({ financeForms: result });
   });
+});
+
+router.get("/assigned", verifyToken, (req, res) => {
+  let query;
+  if (req.user.account_type == 1) {
+    query = `SELECT * FROM evaluationtable WHERE assigned_by = ${req.user.id}`;
+  } else if (req.user.account_type == 2) {
+    query = `SELECT * FROM evaluationtable WHERE assigned_to = ${req.user.id}`;
+  } else {
+    query = `SELECT * FROM evaluationtable WHERE created_by = ${req.user.id}`;
+  }
+  pool.query(query, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error" });
+    }
+    res.json({ financeForms: result });
+  });
+});
+
+router.put("/assign", verifyToken, (req, res) => {
+  if (req.user.account_type == 1) {
+    const formId = req.body.form_Id;
+    const assigned_by = req.user.id;
+    const assigned_to = req.body.assigned_to;
+    let updateQuery =
+      "UPDATE evaluationtable SET assigned_by = ?,assigned_to = ? WHERE id=?";
+    let updateValues = [assigned_by, assigned_to, formId];
+    pool.query(updateQuery, updateValues, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+      }
+      res.json({ message: "Data updated successfully", result: result });
+    });
+  } else {
+    return res.status(403).json({ error: "Not authorized to assign" });
+  }
 });
 
 router.post("/", verifyToken, (req, res) => {

@@ -100,11 +100,12 @@ router.post("/login", (req, res) => {
             const userData = {
               id: user.id,
               email: user.email,
+              account_type: user.account_type,
               // Add more user data as needed
             };
             // Generate JWT token with user data
             const token = jwt.sign(userData, "your_secret_key", {
-              expiresIn: "1h",
+              expiresIn: "2 days",
             });
             res.status(200).json({ token, account_type: user.account_type });
           } else {
