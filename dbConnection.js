@@ -1,10 +1,10 @@
 const { createPool } = require("mysql");
-
+require("dotenv").config();
 const pool = createPool({
   host: "localhost",
-  user: "root",
-  password: "password",
-  database: "ConstructionDb", // Default database for initial connection
+  user: process.env.DBUSER,
+  password: process.env.DBPASSWORD,
+  database: process.env.DBNAME, // Default database for initial connection
   connectionLimit: 10,
 });
 
