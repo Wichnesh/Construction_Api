@@ -2,3 +2,4 @@ node_modules
 code.js
 api_Test.json
 Notes
+.env
