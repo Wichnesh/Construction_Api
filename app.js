@@ -53,7 +53,10 @@ pool.query(
   property_tax_receipt VARCHAR(255),
   bill_receipt VARCHAR(255),
   building_area VARCHAR(255),
-  uds_area VARCHAR(255)
+  uds_area VARCHAR(255),
+  FOREIGN KEY (created_by) REFERENCES Users(id),
+  FOREIGN KEY (assigned_by) REFERENCES Users(id),
+  FOREIGN KEY (assigned_to) REFERENCES Users(id)
 )`,
   (err) => {
     if (err) {

@@ -6,10 +6,19 @@ const Evaluation = require("../EvaluationModel");
 
 router.get("/", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
-  const getAllFinanceFormsQuery = "SELECT * FROM evaluationtable";
+  const getAllFinanceFormsQuery = `SELECT evaluationtable.*, CreatedBy.name AS created_by_name, CreatedBy.email AS created_by_email,
+  AssignedBy.name AS assigned_by_name, AssignedBy.email AS assigned_by_email,
+  AssignedTo.name AS assigned_to_name, AssignedTo.email AS assigned_to_email
+FROM evaluationtable
+LEFT JOIN Users AS CreatedBy ON evaluationtable.created_by = CreatedBy.id
+LEFT JOIN Users AS AssignedBy ON evaluationtable.assigned_by = AssignedBy.id
+LEFT JOIN Users AS AssignedTo ON evaluationtable.assigned_to = AssignedTo.id
+`;
   pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res
+        .status(500)
+        .json({ error: "Internal server error", message: err });
     }
     res.json({ financeForms: result });
   });
