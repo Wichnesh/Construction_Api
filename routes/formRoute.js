@@ -4,6 +4,7 @@ const pool = require("../dbConnection");
 const { verifyToken } = require("../services/authorize");
 const Evaluation = require("../models/EvaluationModel");
 const fs = require("fs");
+// const sharp = require("sharp");
 
 const multer = require("multer");
 const imageFilter = (req, file, cb) => {
@@ -21,10 +22,53 @@ var storage = multer.diskStorage({
     cb(null, `${Date.now()}-cons-${file.originalname}`);
   },
 });
-var upload = multer({ storage: storage, fileFilter: imageFilter });
+var upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // Limit file size to 10MB
+  },
+  fileFilter: imageFilter,
+});
 router.get("/", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
-  const getAllFinanceFormsQuery = `SELECT * FROM evaluationtable;
+  const getAllFinanceFormsQuery = `
+  SELECT *
+  FROM evaluationtable;`;
+  pool.query(getAllFinanceFormsQuery, (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Internal server error", message: err });
+    }
+    const getimage_Query =
+      "SELECT * FROM imagestable ORDER BY form_id, field_name;";
+    pool.query(getimage_Query, (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "Internal server error", message: err });
+      }
+      const organizedData = results.reduce((acc, curr) => {
+        const { form_id, field_name, image_name, image_url } = curr;
+        if (!acc[form_id]) {
+          acc[form_id] = {};
+        }
+        if (!acc[form_id][field_name]) {
+          acc[form_id][field_name] = [];
+        }
+        acc[form_id][field_name].push({ image_name, image_url });
+        return acc;
+      }, {});
+      let allImages = organizedData;
+      const mergedResult = mergeObjectWithArray(result, allImages);
+      res.json({ financeForms: mergedResult });
+    });
+  });
+});
+
+router.get("/images", (req, res) => {
+  // Retrieve all finance forms from the evaluationtable
+  const getAllFinanceFormsQuery = `SELECT * FROM imagestable;
         `;
   pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
@@ -32,10 +76,45 @@ router.get("/", (req, res) => {
         .status(500)
         .json({ error: "Internal server error", message: err });
     }
-    res.json({ financeForms: result });
+    res.json({ Images: result });
+  });
+});
+router.get("/group_images", (req, res) => {
+  // let form_id =
+  // Retrieve all finance forms from the evaluationtable
+  const getimage_Query =
+    "SELECT id,form_id,image_url,field_name FROM imagestable WHERE form_id=2 ORDER BY field_name;";
+  pool.query(getimage_Query, (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Internal server error", message: err });
+    }
+    const groupedData = results.reduce((acc, curr) => {
+      const { field_name } = curr;
+      const key = `${field_name}`;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(curr);
+      return acc;
+    }, {});
+    res.json({ Images: groupedData });
   });
 });
 
+function mergeObjectWithArray(array, objects) {
+  return array.map((item) => {
+    const key = item.id.toString();
+    if (objects[key]) {
+      return {
+        ...item,
+        ...objects[key],
+      };
+    }
+    return item;
+  });
+}
 router.get("/form", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const formId = req.body.formId;
@@ -132,11 +211,7 @@ router.put("/assign", verifyToken, (req, res) => {
     return res.status(403).json({ error: "Not authorized to assign" });
   }
 });
-// property_photos
-// g_l
-// location_map
-// e_b
-// property_tax
+
 router.post(
   "/",
   upload.fields([
@@ -415,14 +490,13 @@ router.delete("/:formId", (req, res) => {
 });
 function insertImagesIntoDatabase(formId, images, fieldName) {
   if (!images) return;
-
   images.forEach((image) => {
     const imageData = fs.readFileSync(image.path);
     const insertImageQuery =
-      "INSERT INTO imagestable (form_id, field_name, image_name, image) VALUES (?, ?, ?, ?)";
+      "INSERT INTO imagestable (form_id, field_name, image_name, image_url, image) VALUES (?, ?, ?, ?, ?)";
     pool.query(
       insertImageQuery,
-      [formId, fieldName, image.originalname, imageData],
+      [formId, fieldName, image.originalname, image.path, imageData],
       (error, results, fields) => {
         if (error) {
           console.error("Error inserting image: " + error.stack);
@@ -433,4 +507,5 @@ function insertImagesIntoDatabase(formId, images, fieldName) {
     );
   });
 }
+
 module.exports = router;
