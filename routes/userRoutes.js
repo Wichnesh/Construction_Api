@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../dbConnection");
-const User = require("../userModel");
+const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -24,10 +24,42 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/:userId", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "Yet to code!",
+router.get("/users", (req, res) => {
+  let account_type = req.body.account_type;
+  const getAllUsersQuery =
+    "SELECT id,name FROM Users Where account_type=" + account_type + ";";
+
+  pool.query(getAllUsersQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error", msg: err });
+    }
+
+    // Map the result to an array of User objects
+    const users = result.map(
+      (user) =>
+        new User(user.id, user.name, user.email, null, user.account_type)
+    );
+
+    res.json({ users: users });
+  });
+});
+
+router.get("/user", (req, res) => {
+  let user_id = req.body.user_id;
+  const getAllUsersQuery = "SELECT * FROM Users Where id=" + user_id + ";";
+
+  pool.query(getAllUsersQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error", msg: err });
+    }
+
+    // Map the result to an array of User objects
+    const users = result.map(
+      (user) =>
+        new User(user.id, user.name, user.email, null, user.account_type)
+    );
+
+    res.json({ users: users });
   });
 });
 
