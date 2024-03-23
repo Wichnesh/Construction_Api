@@ -5,7 +5,16 @@ const port = process.env.PORT || 3003;
 const userRoute = require("./routes/userRoutes");
 const formRoute = require("./routes/formRoute");
 const tableRoute = require("./routes/tableRoute");
+const cors = require("cors");
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: "http://62.72.58.183:3003",
+    credentials: true, // If you need to include cookies in the request
+  })
+);
+
 // Check if the Users table exists, if not, create it
 pool.query(
   `CREATE TABLE IF NOT EXISTS Users (
