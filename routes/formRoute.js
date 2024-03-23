@@ -3,10 +3,15 @@ const router = express.Router();
 const pool = require("../dbConnection");
 const { verifyToken } = require("../services/authorize");
 const Evaluation = require("../models/EvaluationModel");
-const fs = require("fs");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const crypto = require("crypto");
-// const sharp = require("sharp");
+const sharp = require("sharp");
+const {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const randomImageName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
@@ -31,14 +36,7 @@ const imageFilter = (req, file, cb) => {
     cb("Please upload only images.", false);
   }
 };
-var storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, __dirname + "/uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-cons-${file.originalname}`);
-  },
-});
+const storage = multer.memoryStorage();
 var upload = multer({
   storage: storage,
   limits: {
@@ -82,7 +80,6 @@ router.get("/", (req, res) => {
     });
   });
 });
-
 router.get("/specific", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const getAllFinanceFormsQuery = `
@@ -97,18 +94,28 @@ router.get("/specific", (req, res) => {
     res.json({ financeForms: result });
   });
 });
-
-router.get("/images", (req, res) => {
+router.get("/images", async (req, res) => {
   // Retrieve all finance forms from the evaluationtable
+  // const client = new S3Client(clientParams);
+
   const getAllFinanceFormsQuery = `SELECT * FROM imagestable;
         `;
-  pool.query(getAllFinanceFormsQuery, (err, result) => {
+  pool.query(getAllFinanceFormsQuery, async (err, results) => {
     if (err) {
       return res
         .status(500)
         .json({ error: "Internal server error", message: err });
     }
-    res.json({ Images: result });
+    for (const result of results) {
+      const getObjectParams = {
+        Bucket: bucketName,
+        Key: result.image_name,
+      };
+      const command = new GetObjectCommand(getObjectParams);
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+      result.image_url = url;
+    }
+    res.json({ Images: results });
   });
 });
 router.get("/group_images", (req, res) => {
@@ -134,19 +141,6 @@ router.get("/group_images", (req, res) => {
     res.json({ Images: groupedData });
   });
 });
-
-function mergeObjectWithArray(array, objects) {
-  return array.map((item) => {
-    const key = item.id.toString();
-    if (objects[key]) {
-      return {
-        ...item,
-        ...objects[key],
-      };
-    }
-    return item;
-  });
-}
 router.get("/form", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const formId = req.body.formId;
@@ -158,7 +152,6 @@ router.get("/form", (req, res) => {
     res.json({ financeForm: result });
   });
 });
-
 router.get("/userforms", verifyToken, (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const getAllFinanceFormsQuery = `SELECT evaluationtable.*, CreatedBy.name AS created_by_name, CreatedBy.email AS created_by_email,
@@ -175,7 +168,6 @@ LEFT JOIN Users AS AssignedTo ON evaluationtable.assigned_to = AssignedTo.id WHE
     res.json({ financeForms: result });
   });
 });
-
 router.get("/assigned", verifyToken, (req, res) => {
   let query;
   if (req.user.account_type == 1) {
@@ -192,7 +184,6 @@ router.get("/assigned", verifyToken, (req, res) => {
     res.json({ financeForms: result });
   });
 });
-
 router.put("/assign", verifyToken, (req, res) => {
   if (req.user.account_type == 1) {
     const formId = req.body.form_Id;
@@ -245,7 +236,6 @@ router.put("/assign", verifyToken, (req, res) => {
     return res.status(403).json({ error: "Not authorized to assign" });
   }
 });
-
 router.post(
   "/",
   upload.fields([
@@ -404,15 +394,10 @@ router.post(
     }
   }
 );
-
 router.put("/reset/:id", verifyToken, (req, res) => {
   try {
     const evaluationData = req.body;
     const evaluationId = req.params.id;
-
-    if (evaluationData.applicantName == "") {
-      return res.status(400).json({ error: "Applicant Name is Empty" });
-    }
 
     const updateDataQuery = `UPDATE evaluationtable SET
         applicant_name = ?,
@@ -482,7 +467,6 @@ router.put("/reset/:id", verifyToken, (req, res) => {
     res.status(500).json({ error: "Internal server error", msg: err });
   }
 });
-
 router.put("/:id", verifyToken, (req, res) => {
   try {
     const evaluationData = req.body;
@@ -521,30 +505,49 @@ router.put("/:id", verifyToken, (req, res) => {
     res.status(500).json({ error: "Internal server error", msg: err });
   }
 });
-
 router.delete("/:formId", (req, res) => {
   res.status(200).json({
     status: "OK",
     message: "Yet to code!",
   });
 });
+router.delete("/image", (req, res) => {
+  deleteImages(req.body.id);
+  res.json({ message: "Deleted Image Data" });
+});
+function mergeObjectWithArray(array, objects) {
+  return array.map((item) => {
+    const key = item.id.toString();
+    if (objects[key]) {
+      return {
+        ...item,
+        ...objects[key],
+      };
+    }
+    return item;
+  });
+}
 function insertImagesIntoDatabase(formId, images, fieldName) {
   if (!images) return;
   images.forEach(async (image) => {
-    const imageData = fs.readFileSync(image.path);
+    // const imageData = fs.readFileSync(image.path);
+    const buffer = await sharp(image.buffer)
+      .resize({ height: 1920, width: 1080, fit: "contain" })
+      .toBuffer();
+    const image_name = randomImageName();
     const params = {
       Bucket: bucketName,
-      Key: randomImageName(),
-      Body: image.buffer,
+      Key: image_name,
+      Body: buffer,
       ContentType: image.mimetype,
     };
     const command = new PutObjectCommand(params);
     await s3.send(command);
     const insertImageQuery =
-      "INSERT INTO imagestable (form_id, field_name, image_name, image_url, image) VALUES (?, ?, ?, ?, ?)";
+      "INSERT INTO imagestable (form_id, field_name, image_name, image_url) VALUES (?, ?, ?, ?)";
     pool.query(
       insertImageQuery,
-      [formId, fieldName, image.originalname, image.path, imageData],
+      [formId, fieldName, image_name, image.path],
       (error, results, fields) => {
         if (error) {
           console.error("Error inserting image: " + error.stack);
@@ -555,5 +558,31 @@ function insertImagesIntoDatabase(formId, images, fieldName) {
     );
   });
 }
-
+function deleteImages(id) {
+  const selectImageDataQuery = `SELECT * FROM imagestable WHERE id=${id};`;
+  pool.query(selectImageDataQuery, async (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Internal server error", message: err });
+    }
+    for (const result of results) {
+      const params = {
+        Bucket: bucketName,
+        Key: result.image_name,
+      };
+      const command = new DeleteObjectCommand(params);
+      await s3.send(command);
+    }
+    const deleteImageDataQuery = `DELETE * FROM imagestable WHERE id=${id};`;
+    pool.query(deleteImageDataQuery, async (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "Internal server error", message: err });
+      }
+      console.log("Deleted image successfully.");
+    });
+  });
+}
 module.exports = router;

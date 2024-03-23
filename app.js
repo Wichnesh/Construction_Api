@@ -35,9 +35,8 @@ pool.query(
     id INT AUTO_INCREMENT PRIMARY KEY,
     form_id INT,
     field_name VARCHAR(30),
-    image_name VARCHAR(50),
+    image_name VARCHAR(255),
     image_url VARCHAR(255),
-    image LONGBLOB,
     FOREIGN KEY (form_id) REFERENCES evaluationtable(id)
 );`
 );
