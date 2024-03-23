@@ -155,7 +155,7 @@ router.get("/assigned", verifyToken, (req, res) => {
   }
   pool.query(query, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error", msg: err });
     }
     res.json({ financeForms: result });
   });
@@ -201,7 +201,9 @@ router.put("/assign", verifyToken, (req, res) => {
         pool.query(updateQuery, updateValues, (err, result) => {
           if (err) {
             console.error(err);
-            return res.status(500).json({ error: "Internal server error" });
+            return res
+              .status(500)
+              .json({ error: "Internal server error", msg: err });
           }
           res.json({ message: "Data updated successfully", result: result });
         });
@@ -350,7 +352,9 @@ router.post(
         pool.query(insertDataQuery, insertDataValues, (err, result) => {
           if (err) {
             console.error(err);
-            return res.status(500).json({ error: "Internal server error" });
+            return res
+              .status(500)
+              .json({ error: "Internal server error", msg: err });
           }
           const formId = result.insertId;
           insertImagesIntoDatabase(formId, property_photos, "property_photos");
@@ -364,7 +368,7 @@ router.post(
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal server error" });
+      res.status(500).json({ error: "Internal server error", msg: err });
     }
   }
 );
@@ -434,14 +438,16 @@ router.put("/reset/:id", verifyToken, (req, res) => {
     pool.query(updateDataQuery, updateDataValues, (err, result) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Internal server error" });
+        return res
+          .status(500)
+          .json({ error: "Internal server error", msg: err });
       }
 
       res.json({ message: "Data updated successfully", result: result });
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", msg: err });
   }
 });
 
@@ -471,14 +477,16 @@ router.put("/:id", verifyToken, (req, res) => {
     pool.query(updateDataQuery, updateDataValues, (err, result) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Internal server error" });
+        return res
+          .status(500)
+          .json({ error: "Internal server error", msg: err });
       }
 
       res.json({ message: "Data updated successfully", result: result });
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error", msg: err });
   }
 });
 

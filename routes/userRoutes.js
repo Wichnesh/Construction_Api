@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
 
   pool.query(getAllUsersQuery, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error", msg: err });
     }
 
     // Map the result to an array of User objects
@@ -78,7 +78,7 @@ router.post("/", (req, res) => {
   const checkUserValues = [email];
   pool.query(checkUserQuery, checkUserValues, async (checkErr, checkResult) => {
     if (checkErr) {
-      return res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error", msg: err });
     }
     // If a user with the email already exists, return an error
     if (checkResult.length > 0) {
@@ -94,7 +94,7 @@ router.post("/", (req, res) => {
 
     pool.query(insertUserQuery, insertUserValues, (err, result) => {
       if (err) {
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error", msg: err });
       }
       const newUser = new User(
         result.insertId,
