@@ -5,7 +5,6 @@ const port = process.env.PORT || 3003;
 const userRoute = require("./routes/userRoutes");
 const formRoute = require("./routes/formRoute");
 const tableRoute = require("./routes/tableRoute");
-
 app.use(express.json());
 // Check if the Users table exists, if not, create it
 pool.query(
@@ -149,7 +148,6 @@ pool.query(
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/forms", formRoute);
 app.use("/api/v1/tables", tableRoute);
-
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

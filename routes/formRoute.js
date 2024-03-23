@@ -4,8 +4,25 @@ const pool = require("../dbConnection");
 const { verifyToken } = require("../services/authorize");
 const Evaluation = require("../models/EvaluationModel");
 const fs = require("fs");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const crypto = require("crypto");
 // const sharp = require("sharp");
 
+const randomImageName = (bytes = 32) =>
+  crypto.randomBytes(bytes).toString("hex");
+
+const bucketName = process.env.BUCKET_NAME;
+const bucketRegion = process.env.BUCKET_REGION;
+const accessKey = process.env.ACCESS_KEY;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY;
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: accessKey,
+    secretAccessKey: secretAccessKey,
+  },
+  region: bucketRegion,
+});
 const multer = require("multer");
 const imageFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
@@ -63,6 +80,21 @@ router.get("/", (req, res) => {
       const mergedResult = mergeObjectWithArray(result, allImages);
       res.json({ financeForms: mergedResult });
     });
+  });
+});
+
+router.get("/specific", (req, res) => {
+  // Retrieve all finance forms from the evaluationtable
+  const getAllFinanceFormsQuery = `
+  SELECT id, assigned_by, finance_name, branch, applicant_name, created_by, created_by_name, created_by_email, assigned_by_name, assigned_by_email, assigned_to_name ,assigned_to_email
+  FROM evaluationtable;`;
+  pool.query(getAllFinanceFormsQuery, (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Internal server error", message: err });
+    }
+    res.json({ financeForms: result });
   });
 });
 
@@ -498,8 +530,16 @@ router.delete("/:formId", (req, res) => {
 });
 function insertImagesIntoDatabase(formId, images, fieldName) {
   if (!images) return;
-  images.forEach((image) => {
+  images.forEach(async (image) => {
     const imageData = fs.readFileSync(image.path);
+    const params = {
+      Bucket: bucketName,
+      Key: randomImageName(),
+      Body: image.buffer,
+      ContentType: image.mimetype,
+    };
+    const command = new PutObjectCommand(params);
+    await s3.send(command);
     const insertImageQuery =
       "INSERT INTO imagestable (form_id, field_name, image_name, image_url, image) VALUES (?, ?, ?, ?, ?)";
     pool.query(

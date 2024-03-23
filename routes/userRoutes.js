@@ -52,7 +52,6 @@ router.get("/user", (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Internal server error", msg: err });
     }
-
     // Map the result to an array of User objects
     const users = result.map(
       (user) =>
@@ -94,7 +93,9 @@ router.post("/", (req, res) => {
 
     pool.query(insertUserQuery, insertUserValues, (err, result) => {
       if (err) {
-        return res.status(500).json({ error: "Internal server error", msg: err });
+        return res
+          .status(500)
+          .json({ error: "Internal server error", msg: err });
       }
       const newUser = new User(
         result.insertId,
@@ -162,9 +163,22 @@ router.put("/:userId", (req, res) => {
 });
 
 router.delete("/:userId", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "Yet to code!",
+  const deleteQuery = `DELETE FROM Users WHERE id=${req.params.userId};`;
+  pool.query(deleteQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error", msg: err });
+    }
+    res.json({ message: `User ${req.params.userId} Deleted!` });
+  });
+});
+
+router.delete("/", (req, res) => {
+  const deleteQuery = `DELETE FROM Users;`;
+  pool.query(deleteQuery, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Internal server error", msg: err });
+    }
+    res.json({ message: `All Users Deleted!` });
   });
 });
 
