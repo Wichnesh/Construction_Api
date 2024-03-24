@@ -149,18 +149,43 @@ router.get("/form", (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Internal server error", msg: err });
     }
-    res.json({ financeForm: result });
+    const getimage_Query = `SELECT * FROM imagestable WHERE form_id = ${formId} ORDER BY form_id, field_name;`;
+    pool.query(getimage_Query, async (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "Internal server error", message: err });
+      }
+      for (const result of results) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: result.image_name,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        result.image_url = url;
+      }
+      const organizedData = results.reduce((acc, curr) => {
+        const { form_id, field_name, image_name, image_url } = curr;
+        if (!acc[form_id]) {
+          acc[form_id] = {};
+        }
+        if (!acc[form_id][field_name]) {
+          acc[form_id][field_name] = [];
+        }
+        acc[form_id][field_name].push(image_url);
+        return acc;
+      }, {});
+      let allImages = organizedData;
+      const mergedResult = mergeObjectWithArray(result, allImages);
+      res.json({ financeForms: mergedResult[0] });
+    });
   });
 });
 router.get("/userforms", verifyToken, (req, res) => {
   // Retrieve all finance forms from the evaluationtable
-  const getAllFinanceFormsQuery = `SELECT evaluationtable.*, CreatedBy.name AS created_by_name, CreatedBy.email AS created_by_email,
-  AssignedBy.name AS assigned_by_name, AssignedBy.email AS assigned_by_email,
-  AssignedTo.name AS assigned_to_name, AssignedTo.email AS assigned_to_email
-FROM evaluationtable
-LEFT JOIN Users AS CreatedBy ON evaluationtable.created_by = CreatedBy.id
-LEFT JOIN Users AS AssignedBy ON evaluationtable.assigned_by = AssignedBy.id
-LEFT JOIN Users AS AssignedTo ON evaluationtable.assigned_to = AssignedTo.id WHERE created_by = ${req.user.id}`;
+  const getAllFinanceFormsQuery = `SELECT id, assigned_by, finance_name, branch, applicant_name, created_by, created_by_name, created_by_email, assigned_by_name, assigned_by_email, assigned_to_name ,assigned_to_email
+  FROM evaluationtable WHERE created_by = ${req.user.id}`;
   pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Internal server error", msg: err });
