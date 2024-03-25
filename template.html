@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dynamic PDF with HTML Table</title>
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        color: #2e2e2e; /* Specify the desired font family */
+      }
+      table {
+        border-collapse: collapse; /* Collapse table borders */
+        width: 100%;
+      }
+      th,
+      td {
+        border: none; /* Remove borders from table cells */
+        padding: 8px; /* Add padding to table cells */
+        text-align: left; /* Align text to left in table cells */
+      }
+      h4 {
+        text-align: left;
+        letter-spacing: 1.5;
+      }
+      h5 {
+        text-align: left;
+      }
+      td,
+      th,
+      h3,
+      h5 {
+        font-family: "Roboto", sans-serif;
+      }
+      th {
+        font-weight: 300;
+      }
+      td {
+        font-weight: 700;
+      }
+      .entire_section > h3 {
+        background-color: rgb(159, 190, 255);
+        padding: 5px;
+        color: #000;
+      }
+      .each_section > h5 {
+        font-size: 16px;
+      }
+      .seal_sign {
+        margin-top: 80px;
+      }
+      img{
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 style="text-align: center">Evaluation Report</h2>
+    <div class="entire_section basic_valuation">
+      <h3>Basic Valuation Details</h3>
+      <div class="each_section basic_details">
+        <h5>Basic Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Name Of Applicant</th>
+              <td width="35%"><%= data.applicant_name %></td>
+            </tr>
+            <tr>
+              <th>Property Owner Name</th>
+              <td width="35%"><%= data.property_owner_name %></td>
+            </tr>
+            <tr>
+              <th>Relationship With Applicant</th>
+              <td width="35%"><%= data.relationship_with_applicant %></td>
+            </tr>
+            <tr>
+              <th>Report Date</th>
+              <td width="35%"><%= data.date_of_report %></td>
+            </tr>
+            <tr>
+              <th>Loan Type</th>
+              <td width="35%"><%= data.loan_type %></td>
+            </tr>
+            <tr>
+              <th>Person Met Site</th>
+              <td width="35%"><%= data.person_met_site %></td>
+            </tr>
+            <tr>
+              <th>Document Provided</th>
+              <td width="35%"><%= data.type_of_document %></td>
+            </tr>
+            <tr>
+              <th>Loan Application Number</th>
+              <td width="35%"><%= data.sfdc_lan_no %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section property_details">
+      <h3>Property Details</h3>
+      <div class="each_section location_details">
+        <h5>Location Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Postal Address</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>Address Line 1</th>
+              <td width="35%"><%= data.pa_address_1 %></td>
+            </tr>
+            <tr>
+              <th>Address Line 2</th>
+              <td width="35%"><%= data.pa_address_2 %></td>
+            </tr>
+            <tr>
+              <th>State</th>
+              <td width="35%"><%= data.pa_state %></td>
+            </tr>
+            <tr>
+              <th>District</th>
+              <td width="35%"><%= data.pa_district %></td>
+            </tr>
+            <tr>
+              <th>Pincode</th>
+              <td width="35%"><%= data.pa_pincode %></td>
+            </tr>
+            <tr>
+              <th>Jurisdiction</th>
+              <td width="35%"><%= data.jurisdiction %></td>
+            </tr>
+            <tr>
+              <th>Distance From City Center</th>
+              <td width="35%"><%= data.distance_from_city_center %></td>
+            </tr>
+            <tr>
+              <th>Property Type</th>
+              <td width="35%"><%= data.property_type %></td>
+            </tr>
+            <tr>
+              <th>Property Sub Type</th>
+              <td width="35%"><%= data.property_sub_type %></td>
+            </tr>
+            <tr>
+              <th>Coordinates</th>
+            </tr>
+            <tr>
+              <th>Latitude</th>
+              <td width="35%"><%= data.latitude %></td>
+            </tr>
+            <tr>
+              <th>Longitude</th>
+              <td width="35%"><%= data.longitude %></td>
+            </tr>
+            <tr>
+              <th>Near By Landmark</th>
+              <td width="35%"><%= data.near_by_landmark %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section schedule_details">
+        <h5>Schedule Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>North Of Property</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Site Visit</th>
+              <td width="35%"><%= data.sd_north_as_per_site %></td>
+            </tr>
+            <tr>
+              <th>- As Per Legal Document</th>
+              <td width="35%"><%= data.sd_north_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.sd_north_as_per_doc==data.sd_north_as_per_site?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>South Of Property</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Site Visit</th>
+              <td width="35%"><%= data.sd_south_as_per_site %></td>
+            </tr>
+            <tr>
+              <th>- As Per Legal Document</th>
+              <td width="35%"><%= data.sd_south_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.sd_south_as_per_doc==data.sd_south_as_per_site?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>West Of Property</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Site Visit</th>
+              <td width="35%"><%= data.sd_west_as_per_site %></td>
+            </tr>
+            <tr>
+              <th>- As Per Legal Document</th>
+              <td width="35%"><%= data.sd_west_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.sd_west_as_per_doc==data.sd_west_as_per_site?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>East Of Property</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Site Visit</th>
+              <td width="35%"><%= data.sd_east_as_per_site %></td>
+            </tr>
+            <tr>
+              <th>- As Per Legal Document</th>
+              <td width="35%"><%= data.sd_east_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.sd_east_as_per_doc==data.sd_east_as_per_site?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>Boundary Matching</th>
+              <td width="35%"><%= data.boundary_matching %></td>
+            </tr>
+            <tr>
+              <th>Earth Quake Resistant</th>
+              <td width="35%"><%= data.earthquack_resistant %></td>
+            </tr>
+            <tr>
+              <th>Property Identification</th>
+              <td width="35%"><%= data.property_identification %></td>
+            </tr>
+            <tr>
+              <th>Current Zoning</th>
+              <td width="35%"><%= data.current_zoning %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section building_details">
+      <h3>Building Details</h3>
+      <div class="each_section construction_details">
+        <h5>Construction Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Construction Type</th>
+              <td width="35%"><%= data.construction_type %></td>
+            </tr>
+            <tr>
+              <th>Construction Quality</th>
+              <td width="35%"><%= data.construction_quality %></td>
+            </tr>
+            <tr>
+              <th>Floor Type</th>
+              <td width="35%"><%= data.floor_type %></td>
+            </tr>
+            <tr>
+              <th>Roof Type</th>
+              <td width="35%"><%= data.roof_type %></td>
+            </tr>
+            <tr>
+              <th>Stair Type</th>
+              <td width="35%"><%= data.stair_type %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section plan_details">
+        <h5>Plan Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Plan Approving Authority</th>
+              <td width="35%"><%= data.plan_copy_approved_by %></td>
+            </tr>
+            <tr>
+              <th>Approved Plan Permission Number</th>
+              <td width="35%"><%= data.plan_copy_approved_no %></td>
+            </tr>
+            <!-- <tr>
+              <th>Layout Plan Detail</th>
+              <td width="35%">UNKNOWN</td>
+            </tr> -->
+            <tr>
+              <th>Plan Validity</th>
+              <td width="35%"><%= data.plan_validity %></td>
+            </tr>
+            <!-- <tr>
+              <th>Construction Plan</th>
+              <td width="35%">UNKNOWN</td>
+            </tr> -->
+            <tr>
+              <th>Occupancy Information</th>
+              <td width="35%"><%= data.occupancy_status %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section infrastructure_support">
+      <h3>Infrastructure Support</h3>
+      <div class="each_section iSupport">
+        <h5>Infrastructure Support</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Accessibility</th>
+              <td width="35%"><%= data.accessibility %></td>
+            </tr>
+            <tr>
+              <th>Accessible Through</th>
+              <td width="35%"><%= data.accessible_through %></td>
+            </tr>
+            <tr>
+              <th>Accessibility Type</th>
+              <td width="35%"><%= data.accessible_type %></td>
+            </tr>
+            <tr>
+              <th>Road Width</th>
+              <td width="35%"><%= data.road_width %></td>
+            </tr>
+            <tr>
+              <th>Sewerage System</th>
+              <td width="35%"><%= data.sewerage_system %></td>
+            </tr>
+            <tr>
+              <th>Water Supply</th>
+              <td width="35%"><%= data.water_supply %></td>
+            </tr>
+            <tr>
+              <th>Electricity</th>
+              <td width="35%"><%= data.electricity %></td>
+            </tr>
+            <tr>
+              <th>Number Of Lifts</th>
+              <td width="35%"><%= data.number_of_lifts %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section plot_dimension">
+        <h5>Plot Dimensions</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>North</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.pd_north_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.pd_north_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>- As Per Approved Plan</th>
+              <td width="35%"><%= data.pd_north_as_per_approved %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%= (data.pd_north_as_per_doc==data.sd_north_as_per_actual &&
+                data.sd_north_as_per_actual==data.sd_north_as_per_approved)?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>South</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.pd_south_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.pd_south_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>- As Per Approved Plan</th>
+              <td width="35%"><%= data.pd_south_as_per_approved %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%= (data.pd_south_as_per_doc==data.sd_south_as_per_actual &&
+                data.sd_south_as_per_actual==data.sd_south_as_per_approved)?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>East</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.pd_east_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.pd_east_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>- As Per Approved Plan</th>
+              <td width="35%"><%= data.pd_east_as_per_approved %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%= (data.pd_east_as_per_doc==data.sd_east_as_per_actual &&
+                data.sd_east_as_per_actual==data.sd_east_as_per_approved)?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>West</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.pd_west_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.pd_west_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>- As Per Approved Plan</th>
+              <td width="35%"><%= data.pd_west_as_per_approved %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%= (data.pd_west_as_per_doc==data.sd_west_as_per_actual &&
+                data.sd_west_as_per_actual==data.sd_west_as_per_approved)?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section land_area">
+        <h5>Land Area</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Holding Type</th>
+              <td width="35%"><%= data.holding_type %></td>
+            </tr>
+            <tr>
+              <th>Area</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.area_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.area_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>- As Per Approved Plan</th>
+              <td width="35%"><%= data.area_as_per_approved %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%= (data.area_as_per_actual==data.area_as_per_doc &&
+                data.sd_north_as_per_actual==data.sd_north_as_per_approved)?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section bua_details">
+        <h5>BUA Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Ground 1</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.ground_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.ground_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.ground_as_per_actual==data.ground_as_per_approved?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>Summation</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.summation_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.summation_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.summation_as_per_actual==data.summation_as_per_approved?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+            <tr>
+              <th>Configuration</th>
+              <td width="35%"><%= data.configuration %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section sbua_details">
+        <h5>SBUA Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.sbua_as_per_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.sbua_as_per_doc %></td>
+            </tr>
+            <tr>
+              <th>Is Match</th>
+              <td width="35%">
+                <%=
+                data.sbua_as_per_actual==data.sbua_as_per_approved?"TRUE":"FALSE"
+                %>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section additional_details">
+        <h5>Additional Details</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Risk of Demolition</th>
+              <td width="35%"><%= data.risk_of_demolition %></td>
+            </tr>
+            <tr>
+              <th>Construction Progress</th>
+              <td width="35%"><%= data.construction_progress %></td>
+            </tr>
+            <tr>
+              <th>Progress In Words</th>
+              <td width="35%"><%= data.progress_in_words %></td>
+            </tr>
+            <tr>
+              <th>Recommendation For Funding</th>
+              <td width="35%"><%= data.recommendation_for_funding %></td>
+            </tr>
+            <tr>
+              <th>Age Of Property</th>
+              <td width="35%"><%= data.age_of_the_building %></td>
+            </tr>
+            <tr>
+              <th>Rera Detail</th>
+              <td width="35%"><%= data.rera_detail %></td>
+            </tr>
+            <tr>
+              <th>Development In Vicinity</th>
+              <td width="35%"><%= data.development_in_vicinity %></td>
+            </tr>
+            <tr>
+              <th>Earlier Valuation</th>
+              <td width="35%"><%= data.earlier_valuation %></td>
+            </tr>
+            <tr>
+              <th>Negative Area - As Per Local Norms</th>
+              <td width="35%"><%= data.negative_area_norms %></td>
+            </tr>
+            <tr>
+              <th>Community Sensitivity</th>
+              <td width="35%"><%= data.community_sensitivity %></td>
+            </tr>
+            <tr>
+              <th>Municipal Notification</th>
+              <td width="35%"><%= data.municipal_notification %></td>
+            </tr>
+            <tr>
+              <th>Ownership Details</th>
+              <td width="35%"><%= data.ownership_details %></td>
+            </tr>
+            <tr>
+              <th>Type Of Document</th>
+              <td width="35%"><%= data.type_of_document %></td>
+            </tr>
+            <tr>
+              <th>In Favour Of</th>
+              <td width="35%"><%= data.in_favour_of %></td>
+            </tr>
+            <tr>
+              <th>Executed On</th>
+              <td width="35%"><%= data.executed_on %></td>
+            </tr>
+            <tr>
+              <th>Document Number</th>
+              <td width="35%"><%= data.document_number %></td>
+            </tr>
+            <tr>
+              <th>Market Feedback</th>
+              <td width="35%"><%= data.market_feedback %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section property_value_assessment">
+      <h3>Property Value Assessment</h3>
+      <div class="each_section land">
+        <h5>Land</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Government Price</th>
+              <td width="35%"><%= data.government_price %></td>
+            </tr>
+            <tr>
+              <th>Consideration Price</th>
+              <td width="35%"><%= data.consideration_price %></td>
+            </tr>
+            <tr>
+              <th>Area</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.land_area_market_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data."land_area_market_document" %></td>
+            </tr>
+            <tr>
+              <th>Total Value Government Price</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.land_gprice_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.land_gprice_document %></td>
+            </tr>
+            <tr>
+              <th>Total Value Fair Market</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.land_fair_market_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.land_fair_market_document %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section ground_1">
+        <h5>Ground 1</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Government Price</th>
+              <td width="35%"><%= data.ground_government_price %></td>
+            </tr>
+            <tr>
+              <th>Consideration Price</th>
+              <td width="35%"><%= data.ground_considerationt_price %></td>
+            </tr>
+            <tr>
+              <th>Area</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.ground_area_market_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.ground_area_market_document %></td>
+            </tr>
+            <tr>
+              <th>Total Value Government Price</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.ground_gprice_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.ground_gprice_document %></td>
+            </tr>
+            <tr>
+              <th>Total Value Fair Market</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.ground_fair_market_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.ground_fair_market_document %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="each_section final_valuation">
+        <h5>Final Valuation</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Fair Market Value On Date</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.final_fair_market_date_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.final_fair_market_date_document %></td>
+            </tr>
+            <tr>
+              <th>Fair Market Value On Completion</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%">
+                <%= data.final_fair_market_completion_actual %>
+              </td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%">
+                <%= data.final_fair_market_completion_document %>
+              </td>
+            </tr>
+            <tr>
+              <th>Distressed Sale Value</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.distrested_sale_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.distrested_sale_doc %></td>
+            </tr>
+            <tr>
+              <th>Valuation - As Per Guideline</th>
+              <td width="35%"></td>
+            </tr>
+            <tr>
+              <th>- As Per Actual</th>
+              <td width="35%"><%= data.valuation_guideline_actual %></td>
+            </tr>
+            <tr>
+              <th>- As Per Document Provided</th>
+              <td width="35%"><%= data.valuation_guideline_doc %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section valuer_remarks">
+      <h3>Valuer Remarks</h3>
+      <div class="each_section remarks">
+        <h5>Valuer Remarks</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>Remarks</th>
+              <td width="35%"><%= data.remarks %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section valuer_details">
+      <h3>Valuer Details</h3>
+      <div class="each_section">
+        <table>
+          <tbody>
+            <tr>
+              <th>Valuer Name</th>
+              <td width="35%"></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3 class="seal_sign">Seal and Signature</h3>
+      </div>
+    </div>
+    <div class="entire_section valuer_declaration">
+      <h3>Valuer Declaration</h3>
+      <div class="each_section">
+        <h5>Declaration</h5>
+        <table>
+          <tbody>
+            <tr>
+              <th>1.</th>
+              <td width="40%"></td>
+              <td>
+                Valle And The Service Provider Partner Have No Direct Or
+                Indirect Interest In The Property.
+              </td>
+            </tr>
+            <tr>
+              <th>2.</th>
+              <td width="40%"></td>
+              <td>
+                The Valuation Provided Here Is Based On Our Best Knowledge,
+                Ability And Experience And Is Under Prevailing Market Rates At
+                The Time Of Evaluation.
+              </td>
+            </tr>
+            <tr>
+              <th>3.</th>
+              <td width="40%"></td>
+              <td>
+                This Report Is Computer-Generated And Has Been Reviewed By Above
+                Valuer, Rendering A Wet Signature Unnecessary.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="entire_section images">
+      <h3>All Images</h3>
+      <div class="each_section">
+        <% if (typeof data.property_photos !== 'undefined' && data.property_photos.length > 0) { %>
+          <h5>Property Photos</h5>
+          <% for (var i = 0; i < data.property_photos.length; i=i+2) { %>
+          
+            <img src=<%= data.property_photos[i] %>
+            width="300" height="300" alt="property_photo">
+          
+          <% } %>
+        <% } %>
+      </div>
+      <div class="each_section">
+        <% if (typeof data.g_l !== 'undefined' && data.g_l.length > 0) { %>
+        <h5>GL</h5>
+        <% for (var i = 0; i < data.g_l.length; i=i+2) { %>
+        <img src=<%= data.g_l[i] %> width="300" height="300" alt="g_l">
+        <% } %>
+        <% } %>
+      </div>
+      <div class="each_section">
+        <% if (typeof data.location_map !== 'undefined' && data.location_map.length > 0) { %>
+        <h5>Location Map</h5>
+        <% for (var i = 0; i < data.location_map.length; i=i+2) { %>
+          
+            <img src=<%= data.location_map[i] %>
+            width="300" height="300" alt="location_map">
+        
+          <% } %>
+        <% } %>
+      </div>
+      <div class="each_section">
+        <% if (typeof data.e_b !== 'undefined' && data.e_b.length > 0) { %>
+          <h5>EB</h5>
+          <% for (var i = 0; i < data.e_b.length; i=i+2) { %>
+          <img src=<%= data.e_b[i] %> width="300" height="300" alt="e_b">
+          <% } %>
+        <% } %>
+      </div>
+      <div class="each_section">
+        <% if (typeof data.property_tax !== 'undefined' && data.property_tax.length > 0) { %>
+          <h5>Property Tax</h5>
+          <% for (var i = 0; i < data.property_tax.length; i=i+2) { %>
+         
+            <img src=<%= data.property_tax[i] %>
+            width="300" height="300" alt="property_tax">
+      
+          <% } %>
+        <% } %>
+      </div>
+      <div class="each_section">
+        <% if (typeof data.other_images !== 'undefined' && data.other_images.length > 0) { %>
+          <h5>Others</h5>
+          <% for (var i = 0; i < data.other_images.length; i=i+2) { %>
+          
+            <img src=<%= data.other_images[i] %>
+            width="300" height="300" alt="other_images">
+          
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>

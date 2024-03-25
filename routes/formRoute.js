@@ -141,9 +141,9 @@ router.get("/group_images", (req, res) => {
     res.json({ Images: groupedData });
   });
 });
-router.get("/form", (req, res) => {
+router.get("/form/:formId", (req, res) => {
   // Retrieve all finance forms from the evaluationtable
-  const formId = req.body.formId;
+  const formId = req.params.formId;
   const getAllFinanceFormsQuery = `SELECT * FROM evaluationtable WHERE id = ${formId}`;
   pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
@@ -182,7 +182,7 @@ router.get("/form", (req, res) => {
     });
   });
 });
-router.get("/userforms", verifyToken, (req, res) => {
+router.get("/userforms/:userId", verifyToken, (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const getAllFinanceFormsQuery = `SELECT id, assigned_by, finance_name, branch, applicant_name, created_by, created_by_name, created_by_email, assigned_by_name, assigned_by_email, assigned_to_name ,assigned_to_email
   FROM evaluationtable WHERE created_by = ${req.user.id}`;
@@ -287,8 +287,8 @@ router.post(
 
       // Insert data into evaluationtable
       const insertDataQuery = `INSERT INTO evaluationtable (
-          created_by, form_status,finance_name,branch,loan_type,sfdc_lan_no,applicant_name,relationship_with_applicant,document_holder,property_owner_name,type_of_property,age_of_the_building,contact_person,contact_no_mobile,date_of_report,date_of_inspection,name_of_engineer,engineer_contact,postal_address_property,address_matching,land_mark,railway_station_kms,bus_stand_kms,development_of_area,occupancy_status,plan_validity,rera_reg_num,jurisdiction,distance_from_city_center,property_type,property_sub_type,near_by_landmark,construction_type,construction_quality,floor_type,roof_type,stair_type,r_c_c,madras_terrace,accessibility,accessible_through,accessible_type,road_width,sewerage_system,water_supply,electricity,number_of_lifts,boundary_matching,earthquack_resistant,property_identification,current_zoning,building_area,uds_area,risk_of_demolition,construction_progress,progress_in_words,recommendation_for_funding,rera_detail,development_in_vicinity,earlier_valuation,negative_area_norms,community_sensitivity,municipal_notification,ownership_details,type_of_document,in_favour_of,executed_on,document_number,market_feedback,remarks,north_as_per_doc,south_as_per_doc,east_as_per_doc,west_as_per_doc,north_as_per_site,south_as_per_site,east_as_per_site,west_as_per_site,north_as_per_approved,south_as_per_approved,east_as_per_approved,west_as_per_approved,latitude,longitude,plan_copy,plan_copy_approved_no,plan_copy_approved_by,type_of_deed,property_tax_receipt,bill_receipt,created_by_name, created_by_email
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+          created_by, form_status,finance_name,branch,loan_type,sfdc_lan_no,applicant_name,relationship_with_applicant,person_met_site,document_holder,property_owner_name,type_of_property,age_of_the_building,contact_person,contact_no_mobile,date_of_report,date_of_inspection,name_of_engineer,engineer_contact,postal_address_property,address_matching,land_mark,railway_station_kms,bus_stand_kms,development_of_area,occupancy_status,plan_validity,rera_reg_num,jurisdiction,distance_from_city_center,property_type,property_sub_type,near_by_landmark,construction_type,construction_quality,floor_type,roof_type,stair_type,r_c_c,madras_terrace,accessibility,accessible_through,accessible_type,road_width,sewerage_system,water_supply,electricity,number_of_lifts,boundary_matching,earthquack_resistant,property_identification,current_zoning,building_area,uds_area,risk_of_demolition,construction_progress,progress_in_words,recommendation_for_funding,rera_detail,development_in_vicinity,earlier_valuation,negative_area_norms,community_sensitivity,municipal_notification,ownership_details,type_of_document,in_favour_of,executed_on,document_number,market_feedback,remarks,north_as_per_doc,south_as_per_doc,east_as_per_doc,west_as_per_doc,north_as_per_site,south_as_per_site,east_as_per_site,west_as_per_site,north_as_per_approved,south_as_per_approved,east_as_per_approved,west_as_per_approved,latitude,longitude,plan_copy,plan_copy_approved_no,plan_copy_approved_by,type_of_deed,property_tax_receipt,bill_receipt,created_by_name, created_by_email
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
       const getCreatedUsersQuery =
         "SELECT * FROM Users Where id=" + req.user.id + ";";
       let createdUser;
@@ -310,6 +310,7 @@ router.post(
           evaluation.sfdc_lan_no,
           evaluation.applicant_name,
           evaluation.relationship_with_applicant,
+          evaluation.person_met_site,
           evaluation.document_holder,
           evaluation.property_owner_name,
           evaluation.type_of_property,
@@ -419,117 +420,90 @@ router.post(
     }
   }
 );
-router.put("/reset/:id", verifyToken, (req, res) => {
-  try {
-    const evaluationData = req.body;
-    const evaluationId = req.params.id;
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "property_photos", maxCount: 5 },
+    { name: "g_l", maxCount: 5 },
+    { name: "location_map", maxCount: 5 },
+    { name: "e_b", maxCount: 5 },
+    { name: "property_tax", maxCount: 5 },
+    { name: "other_images", maxCount: 7 },
+  ]),
+  verifyToken,
+  (req, res) => {
+    try {
+      const evaluationData = req.body;
+      const property_photos = req.files["property_photos"];
+      const g_l = req.files["g_l"];
+      const location_map = req.files["location_map"];
+      const e_b = req.files["e_b"];
+      const property_tax = req.files["property_tax"];
+      const other_images = req.files["other_images"];
+      const evaluationId = req.params.id;
 
-    const updateDataQuery = `UPDATE evaluationtable SET
-        applicant_name = ?,
-        loan_type = ?,
-        sfdc_no = ?,
-        property_owner = ?,
-        type_of_property = ?,
-        postal_address = ?,
-        land_mark = ?,
-        north_by = ?,
-        south_by = ?,
-        east_by = ?,
-        west_by = ?,
-        schedule_property = ?,
-        contact_person = ?,
-        contact_no_mobile = ?,
-        contact_no_landline = ?,
-        plan_copy = ?,
-        plan_copy_approved_no = ?,
-        plan_copy_approved_by = ?,
-        type_of_deed = ?,
-        property_tax_receipt = ?,
-        bill_receipt = ?,
-        building_area = ?,
-        uds_area = ?
-        WHERE id = ?`;
-
-    const updateDataValues = [
-      evaluationData.applicantName,
-      evaluationData.loanType,
-      evaluationData.sfdcNo,
-      evaluationData.propertyOwner,
-      evaluationData.typeOfProperty,
-      evaluationData.postalAddress,
-      evaluationData.landMark,
-      evaluationData.northBy,
-      evaluationData.southBy,
-      evaluationData.eastBy,
-      evaluationData.westBy,
-      evaluationData.scheduleProperty,
-      evaluationData.contactPerson,
-      evaluationData.contactNoMobile,
-      evaluationData.contactNoLandline,
-      evaluationData.planCopy,
-      evaluationData.planCopyApprovedNo,
-      evaluationData.planCopyApprovedBy,
-      evaluationData.typeOfDeed,
-      evaluationData.propertyTaxReceipt,
-      evaluationData.billReceipt,
-      evaluationData.buildingArea,
-      evaluationData.udsArea,
-      evaluationId,
-    ];
-
-    pool.query(updateDataQuery, updateDataValues, (err, result) => {
-      if (err) {
-        console.error(err);
-        return res
-          .status(500)
-          .json({ error: "Internal server error", msg: err });
+      if (Object.keys(evaluationData).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
       }
 
-      res.json({ message: "Data updated successfully", result: result });
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error", msg: err });
-  }
-});
-router.put("/:id", verifyToken, (req, res) => {
-  try {
-    const evaluationData = req.body;
-    const evaluationId = req.params.id;
+      let updateDataQuery = "UPDATE evaluationtable SET ";
+      const updateDataValues = [];
 
-    if (Object.keys(evaluationData).length === 0) {
-      return res.status(400).json({ error: "No fields to update" });
+      Object.keys(evaluationData).forEach((key, index) => {
+        if (key !== "id") {
+          updateDataQuery += `${key} = ?, `;
+          updateDataValues.push(evaluationData[key]);
+        }
+      });
+
+      // Remove the trailing comma and add WHERE clause
+      updateDataQuery = updateDataQuery.slice(0, -2) + " WHERE id = ?";
+      updateDataValues.push(evaluationId);
+
+      pool.query(updateDataQuery, updateDataValues, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res
+            .status(500)
+            .json({ error: "Internal server error", msg: err });
+        }
+        g_l && g_l.length > 0
+          ? delete_images_based_on_form(evaluationId, "g_l")
+          : "";
+        location_map && location_map.length > 0
+          ? delete_images_based_on_form(evaluationId, "location_map")
+          : "";
+        e_b && e_b.length > 0
+          ? delete_images_based_on_form(evaluationId, "e_b")
+          : "";
+        property_tax && property_tax.length > 0
+          ? delete_images_based_on_form(evaluationId, "property_tax")
+          : "";
+        other_images && other_images.length > 0
+          ? delete_images_based_on_form(evaluationId, "other_images")
+          : "";
+        property_photos && property_photos.length > 0
+          ? delete_images_based_on_form(evaluationId, "other_images")
+          : "";
+
+        insertImagesIntoDatabase(
+          evaluationId,
+          property_photos,
+          "property_photos"
+        );
+        insertImagesIntoDatabase(evaluationId, g_l, "g_l");
+        insertImagesIntoDatabase(evaluationId, location_map, "location_map");
+        insertImagesIntoDatabase(evaluationId, e_b, "e_b");
+        insertImagesIntoDatabase(evaluationId, property_tax, "property_tax");
+        insertImagesIntoDatabase(evaluationId, other_images, "other_images");
+        res.json({ message: "Data updated successfully", result: result });
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error", msg: err });
     }
-
-    let updateDataQuery = "UPDATE evaluationtable SET ";
-    const updateDataValues = [];
-
-    Object.keys(evaluationData).forEach((key, index) => {
-      if (key !== "id") {
-        updateDataQuery += `${key} = ?, `;
-        updateDataValues.push(evaluationData[key]);
-      }
-    });
-
-    // Remove the trailing comma and add WHERE clause
-    updateDataQuery = updateDataQuery.slice(0, -2) + " WHERE id = ?";
-    updateDataValues.push(evaluationId);
-
-    pool.query(updateDataQuery, updateDataValues, (err, result) => {
-      if (err) {
-        console.error(err);
-        return res
-          .status(500)
-          .json({ error: "Internal server error", msg: err });
-      }
-
-      res.json({ message: "Data updated successfully", result: result });
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error", msg: err });
   }
-});
+);
 router.delete("/:formId", (req, res) => {
   res.status(200).json({
     status: "OK",
@@ -557,7 +531,7 @@ function insertImagesIntoDatabase(formId, images, fieldName) {
   images.forEach(async (image) => {
     // const imageData = fs.readFileSync(image.path);
     const buffer = await sharp(image.buffer)
-      .resize({ height: 1920, width: 1080, fit: "contain" })
+      .resize({ height: 720, width: 720, fit: "contain" })
       .toBuffer();
     const image_name = randomImageName();
     const params = {
@@ -587,9 +561,7 @@ function deleteImages(id) {
   const selectImageDataQuery = `SELECT * FROM imagestable WHERE id=${id};`;
   pool.query(selectImageDataQuery, async (err, results) => {
     if (err) {
-      return res
-        .status(500)
-        .json({ error: "Internal server error", message: err });
+      console.log({ error: "Internal server error", message: err });
     }
     for (const result of results) {
       const params = {
@@ -599,12 +571,36 @@ function deleteImages(id) {
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
     }
-    const deleteImageDataQuery = `DELETE * FROM imagestable WHERE id=${id};`;
+    const deleteImageDataQuery = `DELETE FROM imagestable WHERE id=${id};`;
     pool.query(deleteImageDataQuery, async (err, results) => {
       if (err) {
-        return res
-          .status(500)
-          .json({ error: "Internal server error", message: err });
+        console.log({ error: "Internal server error", message: err });
+        return;
+      }
+      console.log("Deleted image successfully.");
+    });
+  });
+}
+function delete_images_based_on_form(id, field_name) {
+  const selectImageDataQuery = `SELECT * FROM imagestable WHERE form_id=${id} AND field_name="${field_name}";`;
+  pool.query(selectImageDataQuery, async (err, results) => {
+    if (err) {
+      console.log({ error: "Internal server error", message: err });
+      return;
+    }
+    for (const result of results) {
+      const params = {
+        Bucket: bucketName,
+        Key: result.image_name,
+      };
+      const command = new DeleteObjectCommand(params);
+      await s3.send(command);
+    }
+    const deleteImageDataQuery = `DELETE FROM imagestable WHERE form_id=${id};`;
+    pool.query(deleteImageDataQuery, async (err, results) => {
+      if (err) {
+        console.log({ error: "Internal server error", message: err });
+        return;
       }
       console.log("Deleted image successfully.");
     });

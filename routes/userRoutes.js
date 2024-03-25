@@ -24,8 +24,8 @@ router.get("/", (req, res) => {
   });
 });
 
-router.get("/users", (req, res) => {
-  let account_type = req.body.account_type;
+router.get("/users/:account_type", (req, res) => {
+  let account_type = req.params.account_type;
   const getAllUsersQuery =
     "SELECT id,name FROM Users Where account_type=" + account_type + ";";
 
@@ -44,8 +44,8 @@ router.get("/users", (req, res) => {
   });
 });
 
-router.get("/user", (req, res) => {
-  let user_id = req.body.user_id;
+router.get("/user/:user_id", (req, res) => {
+  let user_id = req.params.user_id;
   const getAllUsersQuery = "SELECT * FROM Users Where id=" + user_id + ";";
 
   pool.query(getAllUsersQuery, (err, result) => {
