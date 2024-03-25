@@ -182,7 +182,7 @@ router.get("/form/:formId", (req, res) => {
     });
   });
 });
-router.get("/userforms/:userId", verifyToken, (req, res) => {
+router.get("/userforms", verifyToken, (req, res) => {
   // Retrieve all finance forms from the evaluationtable
   const getAllFinanceFormsQuery = `SELECT id, assigned_by, finance_name, branch, applicant_name, created_by, created_by_name, created_by_email, assigned_by_name, assigned_by_email, assigned_to_name ,assigned_to_email
   FROM evaluationtable WHERE created_by = ${req.user.id}`;
