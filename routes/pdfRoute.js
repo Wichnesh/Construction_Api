@@ -9,10 +9,10 @@ const crypto = require("crypto");
 const puppeteer = require("puppeteer");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
-    S3Client,
-    PutObjectCommand,
-    GetObjectCommand
-  } = require("@aws-sdk/client-s3");
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} = require("@aws-sdk/client-s3");
 const bucketName = process.env.BUCKET_NAME;
 const bucketRegion = process.env.BUCKET_REGION;
 const accessKey = process.env.ACCESS_KEY;
@@ -27,45 +27,73 @@ const s3 = new S3Client({
 });
 const randomImageName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
-router.get("/:formId",verifyToken, (req, res) => {
-    if(req.user.account_type !== 1){
-        return res.status(403).json({ message: "Forbidden access" });
-    }
+router.get("/:formId", verifyToken, (req, res) => {
+  if (req.user.account_type !== 1) {
+    return res.status(403).json({ message: "Forbidden access" });
+  }
   // Retrieve all users from the Users table
-  const getOneFormQuery = `SELECT * FROM evaluationtable WHERE id=${req.params.formId}`;
-
-  pool.query(getOneFormQuery, (err, result) => {
+  const formId = req.params.formId;
+  const getAllFinanceFormsQuery = `SELECT * FROM evaluationtable WHERE id = ${formId}`;
+  pool.query(getAllFinanceFormsQuery, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Internal server error", msg: err });
     }
-
-    // Map the result to an array of User objects
-    const form = result[0];
-    let pdf_name = randomImageName();
-    generatePDF(form)
+    const getimage_Query = `SELECT * FROM imagestable WHERE form_id = ${formId} ORDER BY form_id, field_name;`;
+    pool.query(getimage_Query, async (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "Internal server error", message: err });
+      }
+      for (const result of results) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: result.image_name,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        result.image_url = url;
+      }
+      const organizedData = results.reduce((acc, curr) => {
+        const { form_id, field_name, image_name, image_url } = curr;
+        if (!acc[form_id]) {
+          acc[form_id] = {};
+        }
+        if (!acc[form_id][field_name]) {
+          acc[form_id][field_name] = [];
+        }
+        acc[form_id][field_name].push(image_url);
+        return acc;
+      }, {});
+      let allImages = organizedData;
+      const mergedResult = mergeObjectWithArray(result, allImages);
+      const form = mergedResult[0];
+      let pdf_name = randomImageName();
+      console.log(form);
+      generatePDF(form)
         .then(async (pdfBytes) => {
-            // Save the PDF to a file
-            const params = {
-                Bucket: bucketName,
-                Key: pdf_name,
-                Body: pdfBytes,
-                ContentType: 'application/pdf',
-            };
-            const command = new PutObjectCommand(params);
-            await s3.send(command);
-            const getObjectParams = {
-                Bucket: bucketName,
-                Key: pdf_name,
-                };
-            const command2 = new GetObjectCommand(getObjectParams);
-            const url = await getSignedUrl(s3, command2, { expiresIn: 3600 });
-            res.json({ pdf: url });
+          // Save the PDF to a file
+          const params = {
+            Bucket: bucketName,
+            Key: pdf_name,
+            Body: pdfBytes,
+            ContentType: "application/pdf",
+          };
+          const command = new PutObjectCommand(params);
+          await s3.send(command);
+          const getObjectParams = {
+            Bucket: bucketName,
+            Key: pdf_name,
+          };
+          const command2 = new GetObjectCommand(getObjectParams);
+          const url = await getSignedUrl(s3, command2, { expiresIn: 3600 });
+          res.json({ pdf: url });
         })
         .catch((error) => {
-            console.error("Error creating PDF:", error);
-            res.json({ error: error });
+          console.error("Error creating PDF:", error);
+          res.json({ error: error });
         });
-    
+    });
   });
 });
 
@@ -178,8 +206,18 @@ async function generatePDF(data) {
 
   return pdfBytes;
 }
-
+function mergeObjectWithArray(array, objects) {
+  return array.map((item) => {
+    const key = item.id.toString();
+    if (objects[key]) {
+      return {
+        ...item,
+        ...objects[key],
+      };
+    }
+    return item;
+  });
+}
 // Generate the PDF using the provided data
 
-
-  module.exports = router;
+module.exports = router;

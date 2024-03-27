@@ -629,24 +629,28 @@ router.put(
       const property_tax = req.files["property_tax"];
       const other_images = req.files["other_images"];
       const evaluationId = req.params.id;
-
+      let updateDataQuery;
+      let updateDataValues;
       if (Object.keys(evaluationData).length === 0) {
-        return res.status(400).json({ error: "No fields to update" });
+        updateDataQuery = "UPDATE evaluationtable SET id = ? WHERE id = ?;"
+        updateDataValues = [evaluationId, evaluationId];
+      }
+      else{
+        updateDataQuery = "UPDATE evaluationtable SET ";
+        updateDataValues = [];
+  
+        Object.keys(evaluationData).forEach((key, index) => {
+          if (key !== "id") {
+            updateDataQuery += `${key} = ?, `;
+            updateDataValues.push(evaluationData[key]);
+          }
+        });
+        // Remove the trailing comma and add WHERE clause
+        updateDataQuery = updateDataQuery.slice(0, -2) + " WHERE id = ?";
+        updateDataValues.push(evaluationId);
       }
 
-      let updateDataQuery = "UPDATE evaluationtable SET ";
-      const updateDataValues = [];
-
-      Object.keys(evaluationData).forEach((key, index) => {
-        if (key !== "id") {
-          updateDataQuery += `${key} = ?, `;
-          updateDataValues.push(evaluationData[key]);
-        }
-      });
-
-      // Remove the trailing comma and add WHERE clause
-      updateDataQuery = updateDataQuery.slice(0, -2) + " WHERE id = ?";
-      updateDataValues.push(evaluationId);
+      
 
       pool.query(updateDataQuery, updateDataValues, (err, result) => {
         if (err) {
@@ -655,25 +659,12 @@ router.put(
             .status(500)
             .json({ error: "Internal server error", msg: err });
         }
-        g_l && g_l.length > 0
-          ? delete_images_based_on_form(evaluationId, "g_l")
-          : "";
-        location_map && location_map.length > 0
-          ? delete_images_based_on_form(evaluationId, "location_map")
-          : "";
-        e_b && e_b.length > 0
-          ? delete_images_based_on_form(evaluationId, "e_b")
-          : "";
-        property_tax && property_tax.length > 0
-          ? delete_images_based_on_form(evaluationId, "property_tax")
-          : "";
-        other_images && other_images.length > 0
-          ? delete_images_based_on_form(evaluationId, "other_images")
-          : "";
-        property_photos && property_photos.length > 0
-          ? delete_images_based_on_form(evaluationId, "other_images")
-          : "";
-
+        delete_images_based_on_form(evaluationId,g_l, "g_l")
+        delete_images_based_on_form(evaluationId,location_map, "location_map")
+        delete_images_based_on_form(evaluationId,e_b, "e_b")
+        delete_images_based_on_form(evaluationId,property_tax, "property_tax")
+        delete_images_based_on_form(evaluationId,other_images, "other_images")
+        delete_images_based_on_form(evaluationId,property_photos, "property_photos")
         insertImagesIntoDatabase(
           evaluationId,
           property_photos,
@@ -769,7 +760,8 @@ function deleteImages(id) {
     });
   });
 }
-function delete_images_based_on_form(id, field_name) {
+function delete_images_based_on_form(id,images, field_name) {
+  if (!images) return;
   const selectImageDataQuery = `SELECT * FROM imagestable WHERE form_id=${id} AND field_name="${field_name}";`;
   pool.query(selectImageDataQuery, async (err, results) => {
     if (err) {
@@ -784,7 +776,7 @@ function delete_images_based_on_form(id, field_name) {
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
     }
-    const deleteImageDataQuery = `DELETE FROM imagestable WHERE form_id=${id};`;
+    const deleteImageDataQuery = `DELETE FROM imagestable WHERE form_id=${id} AND field_name="${field_name}";`;
     pool.query(deleteImageDataQuery, async (err, results) => {
       if (err) {
         console.log({ error: "Internal server error", message: err });
