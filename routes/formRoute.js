@@ -236,7 +236,7 @@ router.put("/assign", verifyToken, (req, res) => {
         // Map the result to an array of User objects
         assignedToUser = user[0];
         let updateQuery =
-          "UPDATE evaluationtable SET assigned_by = ?,assigned_to = ?,assigned_by_name = ?, assigned_by_email = ?, assigned_to_name = ?, assigned_to_email = ? WHERE id=?";
+          "UPDATE evaluationtable SET assigned_by = ?,assigned_to = ?,assigned_by_name = ?, assigned_by_email = ?, assigned_to_name = ?, assigned_to_email = ?, form_status = 1 WHERE id=?";
         let updateValues = [
           assigned_by,
           assigned_to,
